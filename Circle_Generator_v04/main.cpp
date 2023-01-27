@@ -8,11 +8,12 @@
 
 /**
  * @author Tai Zhang
- * @version .02
- * version update:
+ * @version .04
+ * version update compared to v00:
  *      - all files are merged into single file, seperated by endl;
  *      - multiple number of circles of different radii on same sample
  *      - percentage based generation of pixels in circle
+ *      - changed labeling, including radii + x_coord + y_coord of each circle
  */
 
 int main()
@@ -23,11 +24,11 @@ int main()
      * @brief main function to call to generate circles
      * @param a = number of positive samples
      * @param b = number of negative samples
-     * @param size of canvas
-     * @param minimum number of pixels
-     * @param maximum number of pixels
+     * @param size of canvas n*n
+     * @param minimum percentage of pixels
+     * @param maximum percentage of pixels
      * @param noise rate
-     * @param maximum number of circles each radii on screen
+     * @param maximum number of circles of each radii on screen
      * @param radii of circle
      * @param data type
      */

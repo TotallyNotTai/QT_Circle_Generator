@@ -49,6 +49,8 @@ class Circle_generator{
 
         int min_num_points, max_num_points;
 
+        int** total_rad_coord_array;
+
         Canvas final_canvas;
 
 
@@ -104,9 +106,9 @@ class Circle_generator{
          * generates single file with each line a generated test data
          * generates both positive and negative samples
          *
-         * file format: n, m_1, m_2, ..., m_n, data
-         * n: number of lables, in our specific case 2
-         * m_1, m_2, ..., m_n: individual lable values
+         * file format: r_1, x_1, y_1,..., data
+         * r_n = radius of circle n
+         * x_n, y_n = coord of circle center of circle n
          * data: rest of data in single line seperated by commas, for example a 30x30 field generates a single string of 900 zeroes/ones seperated by 899 commas
          */
         void loop_circle_generator(int iloops, int inegloops, int isize, int imin_num_dots, int imax_num_dots, float inoise, int max_num_circle,

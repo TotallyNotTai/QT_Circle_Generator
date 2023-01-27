@@ -137,7 +137,7 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
     final_canvas.canvas_size = isize;
 
     //to be fixed individually for each user
-    std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v03\\generated_test_data\\";
+    std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v04\\generated_test_data\\";
     file_remover(data_path);
 
     std::string data_name = "Test_Circles";
@@ -161,9 +161,25 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 
         }
 
+        // list for future circle coord and radii size
+        // r, x_coord, y_coord
+        int total_circle_num = 0;
+        for (int k=0; k<iradii_size; k++){
+            total_circle_num += num_circle_array[k];
+        }
+
+        total_rad_coord_array = (int**)calloc(total_circle_num, sizeof(int*));
+        for (int k=0; k<total_circle_num; k++){
+            total_rad_coord_array[k] = (int*)calloc(3, sizeof(int));
+        }
+
+        int i_counter = 0;
+
         for (int r=0; r<iradii_size; r++){
+            // draw the full circle inside the canvas
             int min_coord = iradii[r];
             int max_coord = isize-iradii[r];
+
 
 
             // labels for file
@@ -171,7 +187,6 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 
             // draw circle
 //            std::cout << "Starting to draw cricle" << std::endl;
-
 
             for (int k=0; k<num_circle_array[r]; k++){
                 //variance in circle location
@@ -182,9 +197,23 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 //                std::cout << "x coord: " << x_coord << std::endl << "y coord: " << y_coord << std::endl;
 
                 circle_generator(imin_num_dots, imax_num_dots, iradii[r], x_coord, y_coord);
+
+                total_rad_coord_array[i_counter][0] = iradii[r];
+                total_rad_coord_array[i_counter][1] = x_coord;
+                total_rad_coord_array[i_counter][2] = y_coord;
+
+                i_counter += 1;
             }
 //            std::cout << "Finished drawing circle" << std::endl;
         }
+
+//        // uncomment for checking values of radii and coord to be put inside label
+//        for (int l=0; l<total_circle_num; l++){
+//            for (int m=0; m<3; m++){
+//                std::cout << total_rad_coord_array[l][m] << " ";
+//            }
+//            std::cout << std::endl;
+//        }
 
         // uncomment for check on values of final_canvas.final_list_of_coord
 //        for (int k=0;k<static_cast<int>(final_canvas.final_list_of_coord.size());k++){
@@ -217,10 +246,11 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
             // store array contents to file
             std::string final_string;
 
-            // add correct labeling to final_string
-            final_string += std::to_string(iradii_size) + ",";
-            for(int l=0; l<iradii_size; l++){
-                final_string += std::to_string(num_circle_array[l]) + ",";
+            // add radii + x_coord + y_coord into string
+            for (int m=0; m<total_circle_num; m++){
+                for (int n=0; n<3; n++){
+                    final_string += std::to_string(int(total_rad_coord_array[m][n])) + ",";
+                }
             }
 
             for (int m=0;m<final_canvas.canvas_size;m++) {
@@ -239,8 +269,10 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 
 
         if (i%100==0){
-            std::cout << "Writing positive sample file Nr. " << i + 1 << std::endl;
+            std::cout << "Writing positive sample file Nr. " << i << std::endl;
         }
+
+        free(total_rad_coord_array);
 
         free(num_circle_array);
 
@@ -287,7 +319,7 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 
 
         if (i%100==0){
-            std::cout << "Writing negative sample file Nr. " << i+1 << std::endl;
+            std::cout << "Writing negative sample file Nr. " << i << std::endl;
         }
 
         free(final_canvas.canvas_array);
