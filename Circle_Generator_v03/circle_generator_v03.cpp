@@ -137,7 +137,8 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
     final_canvas.canvas_size = isize;
 
     //to be fixed individually for each user
-    std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v03\\generated_test_data\\";
+    //std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v03\\generated_test_data\\";
+    std::string data_path = "C:\\Users\\taizh\\Documents\\Qt_projects\\QT_Circle_Generator\\Circle_Generator_v03\\generated_test_data\\";
     file_remover(data_path);
 
     std::string data_name = "Test_Circles";

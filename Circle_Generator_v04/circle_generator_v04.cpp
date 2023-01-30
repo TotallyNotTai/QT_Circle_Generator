@@ -137,7 +137,8 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
     final_canvas.canvas_size = isize;
 
     //to be fixed individually for each user
-    std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v04\\generated_test_data\\";
+    //std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v04\\generated_test_data\\";
+    std::string data_path = "C:\\Users\\taizh\\Documents\\Qt_projects\\QT_Circle_Generator\\Circle_Generator_v04\\generated_test_data\\";
     file_remover(data_path);
 
     std::string data_name = "Test_Circles";
@@ -246,11 +247,19 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
             // store array contents to file
             std::string final_string;
 
-            // add radii + x_coord + y_coord into string
-            for (int m=0; m<total_circle_num; m++){
-                for (int n=0; n<3; n++){
-                    final_string += std::to_string(int(total_rad_coord_array[m][n])) + ",";
+            // skip for 0 circles
+            if (total_circle_num != 0){
+                // add number of circles into string
+                final_string += std::to_string(total_circle_num) + ",";
+
+                // add radii + x_coord + y_coord into string
+                for (int m=0; m<total_circle_num; m++){
+                    for (int n=0; n<3; n++){
+                        final_string += std::to_string(int(total_rad_coord_array[m][n])) + ",";
+                    }
                 }
+            } else {
+                final_string += std::to_string(-1) + ",";
             }
 
             for (int m=0;m<final_canvas.canvas_size;m++) {
@@ -296,10 +305,11 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
             std::string final_string;
 
             // add correct labeling to final_string
-            final_string += std::to_string(iradii_size) + ",";
-            for(int l=0; l<iradii_size; l++){
-                final_string += "0,";
-            }
+            final_string += std::to_string(-1) + ",";
+//            final_string += std::to_string(iradii_size) + ",";
+//            for(int l=0; l<iradii_size; l++){
+//                final_string += "0,";
+//            }
 
             // add all content of final_canvas to string
             for (int m=0;m<final_canvas.canvas_size;m++) {
