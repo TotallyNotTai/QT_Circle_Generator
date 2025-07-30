@@ -25,7 +25,7 @@ int main()
      * @param radius of circle
      * @param data type
      */
-    test.loop_circle_generator(2, 30, 10, 30, 0.01, 5, "txt");
+    test.loop_circle_generator(200, 30, 10, 30, 0.01, 5, "txt");
 
 
 //    /**

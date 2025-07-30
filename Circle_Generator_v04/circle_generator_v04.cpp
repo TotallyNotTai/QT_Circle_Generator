@@ -1,7 +1,7 @@
 #include "circle_generator_v04.h"
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <random>
 #include <vector>
 #include <string>
@@ -12,25 +12,19 @@
 /**
  * generates test data in form of circles with [n, m] number of pixels with noise
  * intended for generating data for RICH
+ * m_rng is set within Circle_generator::loop_circle_generator
  * @author Tai Zhang
  * @version 1.0
 */
-double mt_rand_generator_class::mt_rand_generator(int a1, int a2){
-    std::random_device dev;
-    std::mt19937 rng(dev());
+double Circle_generator::mt_rand_generator(double a1, double a2){
     std::uniform_real_distribution<double> dis(a1, a2);
-
-    double rand_number = dis(rng);
-
+    double rand_number = dis(m_rng);
     return rand_number;
 };
 
 void Circle_generator::canvas_drawer(){
-    int a = final_canvas.canvas_size;
-    final_canvas.canvas_array = (int**)calloc(a, sizeof(int*));
-    for (int i=0;i<a;i++){
-        final_canvas.canvas_array[i] = (int*)calloc(a, sizeof(int));
-    }
+    int size = final_canvas.canvas_size;
+    final_canvas.canvas_array.assign(size, std::vector<int>(size, 0));
 }
 
 void Circle_generator::noise_generator(float a){
@@ -38,7 +32,7 @@ void Circle_generator::noise_generator(float a){
         if (0<a and a<1){
             for(int i=0;i<final_canvas.canvas_size;i++){
                 for(int j=0;j<final_canvas.canvas_size;j++){
-                    if (mt_rand_generator_class::mt_rand_generator(0,1)>1-a){
+                    if (mt_rand_generator(0,1)>1-a){
                         final_canvas.final_list_of_coord.push_back(Point_Coordinates(i,j));
                     }
                 }
@@ -88,27 +82,16 @@ void Circle_generator::circle_generator(int imin_dots, int imax_dots, int ir, in
     //sort elements, then remove duplicate elements
 
     //generate a new list of random points between given [a, b]
-    int rand_value = static_cast<int>(mt_rand_generator_class::mt_rand_generator(imin_dots, imax_dots));
+    int rand_value = static_cast<int>(mt_rand_generator(imin_dots, imax_dots));
 
     // change in v03, calculating percentage based number of pixels
     int rand_num_pixels = list_of_coord.size()*rand_value/100;
 
-    for(int i=0;i<rand_num_pixels;i++){
-        int _list_index_num = mt_rand_generator_class::mt_rand_generator(0, list_of_coord.size()-1);
-        final_canvas.final_list_of_coord.push_back(list_of_coord[_list_index_num]);
-        list_of_coord.erase(list_of_coord.begin()+_list_index_num);
+    // shuffle and take the first rand_num_pixels elements from the list
+    std::shuffle(list_of_coord.begin(), list_of_coord.end(), m_rng);
+    for(int i = 0; i < rand_num_pixels && i < int(list_of_coord.size()); ++i) {
+        final_canvas.final_list_of_coord.push_back(list_of_coord[i]);
     }
-
-
-//    //checking content of each final_canvas.final_list_of_coord
-
-//    std::cout << "final_canvas.final_list_of_coord ";
-
-//    for (int i=0;i<final_canvas.final_list_of_coord.size();i++){
-//        std::cout << final_canvas.final_list_of_coord[i].x << " " << final_canvas.final_list_of_coord[i].y << " ";
-//    }
-
-//    std::cout << std::endl << std::endl;
 
     list_of_coord.clear();
 }
@@ -118,9 +101,22 @@ void Circle_generator::file_remover(std::string dir_path){
         std::filesystem::remove_all(entry.path());
 }
 
+
 /**
  * main looping function, number of loops, canvas size, min and max of pixels in circle, noise rate, radius
  * generate both positvee and negative samples
+ * iloops = number of positive samples
+ * inegloops = number of negative samples
+ * isize = size of each sample, nxn
+ * a percentage of pixels for each circle are actually drawn on the canvas randomly
+ * imin_num_dots = lower bound of circle percentage
+ * imax_num_dots = upper bound of circle percentage
+ * inoise = random background noise for each sample
+ * min_num_circles = minimum amount of circles of each radii
+ * max_num_circles = maximum amount of circles of each radii
+ * iradii = list of all radii
+ * iradii_size = size of iradii
+ *
  * ideally to use maxium space iradius = isize/4
  * recommend to set noise at 0.01-0.05
  * generates single file with each line a generated test data
@@ -131,18 +127,23 @@ void Circle_generator::file_remover(std::string dir_path){
  * m_1, m_2, ..., m_n: individual lable values
  * data: rest of data in single line seperated by commas, for example a 30x30 field generates a single string of 900 zeroes/ones seperated by 899 commas
  */
-void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isize, int imin_num_dots, int imax_num_dots, float inoise, int max_num_circles,
-                                             int* iradii, int iradii_size, std::string output_type){
-    //define size of canvas
+void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isize, int imin_num_dots, int imax_num_dots, float inoise, int min_num_circles,
+                                             int max_num_circles, int* iradii, int iradii_size){
+    // define size of canvas
     final_canvas.canvas_size = isize;
 
-    //to be fixed individually for each user
-    //std::string data_path = "C:\\Users\\Tai\\Documents\\QT\\Circle_Generator\\Circle_Generator_v04\\generated_test_data\\";
-    std::string data_path = "C:\\Users\\taizh\\Documents\\Qt_projects\\QT_Circle_Generator\\Circle_Generator_v04\\generated_test_data\\";
+    // set mt_rnd_genertor
+    std::random_device dev;
+    m_rng.seed(dev());
+
+    // output handling
+    std::string data_path = output_directory;
+    std::string data_name = output_name;
+
+    // remove old content from output folder
     file_remover(data_path);
 
-    std::string data_name = "Test_Circles";
-
+    // new file
     std::ofstream fw(data_path + data_name + "." + output_type, std::ofstream::out);
 
     // geneartes positive samples ##############################################################################################
@@ -155,10 +156,10 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 
         // generate a number between 0 and max_num_circles for the number of circles appearing on screen
         for (int j=0; j<iradii_size; j++){
-            num_circle_array[j] = mt_rand_generator_class::mt_rand_generator(0, max_num_circles);
-//            // number of circles of different radii
-//            std::cout << std::to_string(num_circle_array[j]) + " ";
-//            std::cout << std::endl;
+            num_circle_array[j] = mt_rand_generator(min_num_circles, max_num_circles+1);
+            // number of circles of different radii
+            std::cout << std::to_string(num_circle_array[j]) + " ";
+            std::cout << std::endl;
 
         }
 
@@ -181,21 +182,12 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
             int min_coord = iradii[r];
             int max_coord = isize-iradii[r];
 
-
-
-            // labels for file
-            //// num_labels, num_circles with radius r_1, num_circles r_2, coord of num_circles r_1, coord of num_circles r_2
-
             // draw circle
-//            std::cout << "Starting to draw cricle" << std::endl;
-
             for (int k=0; k<num_circle_array[r]; k++){
                 //variance in circle location
-                int x_coord = mt_rand_generator_class::mt_rand_generator(min_coord, max_coord);
-                int y_coord = mt_rand_generator_class::mt_rand_generator(min_coord, max_coord);
+                int x_coord = mt_rand_generator(min_coord, max_coord);
+                int y_coord = mt_rand_generator(min_coord, max_coord);
 
-                // exact location of the center of the circle
-//                std::cout << "x coord: " << x_coord << std::endl << "y coord: " << y_coord << std::endl;
 
                 circle_generator(imin_num_dots, imax_num_dots, iradii[r], x_coord, y_coord);
 
@@ -205,42 +197,29 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
 
                 i_counter += 1;
             }
-//            std::cout << "Finished drawing circle" << std::endl;
         }
-
-//        // uncomment for checking values of radii and coord to be put inside label
-//        for (int l=0; l<total_circle_num; l++){
-//            for (int m=0; m<3; m++){
-//                std::cout << total_rad_coord_array[l][m] << " ";
-//            }
-//            std::cout << std::endl;
-//        }
-
-        // uncomment for check on values of final_canvas.final_list_of_coord
-//        for (int k=0;k<static_cast<int>(final_canvas.final_list_of_coord.size());k++){
-//            std::cout << final_canvas.final_list_of_coord[k].x << " " << final_canvas.final_list_of_coord[k].y << " ";
-//        }
 
         // ignore pixels outside of array range
         for(int k=0;k<static_cast<int>(final_canvas.final_list_of_coord.size());k++){
-            if (final_canvas.final_list_of_coord[k].x<0 or final_canvas.canvas_size<final_canvas.final_list_of_coord[k].x){
+            if (final_canvas.final_list_of_coord[k].x<0 or final_canvas.canvas_size<=final_canvas.final_list_of_coord[k].x){
                 continue;
             }
-            if (final_canvas.final_list_of_coord[k].y<0 or final_canvas.canvas_size<final_canvas.final_list_of_coord[k].y){
+            if (final_canvas.final_list_of_coord[k].y<0 or final_canvas.canvas_size<=final_canvas.final_list_of_coord[k].y){
                 continue;
             }
 
             final_canvas.canvas_array[final_canvas.final_list_of_coord[k].x][final_canvas.final_list_of_coord[k].y]=1.0;
         }
 
-        // uncomment for checking on content of canvas
-        for(int i=0; i<final_canvas.canvas_size; i++){
-            for(int j=0; j<final_canvas.canvas_size; j++){
-                std::cout << final_canvas.canvas_array[i][j];
+        if (visualization_status){
+            for(int i=0; i<final_canvas.canvas_size; i++){
+                for(int j=0; j<final_canvas.canvas_size; j++){
+                    std::cout << final_canvas.canvas_array[i][j];
+                }
+                std::cout << std::endl;
             }
             std::cout << std::endl;
-        }
-        std::cout << std::endl;
+        };
 
         if (fw.is_open())
         {
@@ -284,8 +263,6 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
         free(total_rad_coord_array);
 
         free(num_circle_array);
-
-        free(final_canvas.canvas_array);
     }
 
     // generate negative samples #####################################################################
@@ -298,6 +275,16 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
         for(int k=0;k<static_cast<int>(final_canvas.final_list_of_coord.size());k++){
             final_canvas.canvas_array[final_canvas.final_list_of_coord[k].x][final_canvas.final_list_of_coord[k].y]=1.0;
         }
+
+        if (visualization_status){
+            for(int i=0; i<final_canvas.canvas_size; i++){
+                for(int j=0; j<final_canvas.canvas_size; j++){
+                    std::cout << final_canvas.canvas_array[i][j];
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        };
 
         if (fw.is_open())
         {
@@ -331,8 +318,6 @@ void Circle_generator::loop_circle_generator(int iloops, int inegloops, int isiz
         if (i%100==0){
             std::cout << "Writing negative sample file Nr. " << i << std::endl;
         }
-
-        free(final_canvas.canvas_array);
 
 //        external_file_generator(i, data_path, "Test_Circles_neg_", output_type);
     }
